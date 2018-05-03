@@ -1,0 +1,70 @@
+---
+title: "Data Viz: Experiment"
+author: "Evelyn Sanchez & Valerie De la Fuente"
+date: "5/2/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+install.packages("munsell")
+install.packages("rworldmap",
+                 repos = c("http://rstudio.org/_packages",
+                           "http://cran.rstudio.com"))
+```
+
+```{r}
+library(sp)
+library(maptools)
+library(rworldmap)
+```
+
+```{r}
+
+#MAP with shaded colors
+par(mai=c(0,0,.2,0),xaxs="i",yaxs="i")
+apples <- NULL  
+apples$country <- c("Mexico", "Colombia","Ecuador", "Venezuela", "Peru", "Brazil","Bolivia","Paraguay", "Chile", "Argentina", "Uruguay")  
+apples$code<- c("MEX", "COL","ECU", "VEN", "PER", "BRA","BOL","PRY", "CHL", "ARG", "URY")   
+apples$apple_consum<-c(380, 250, 530, 600, 546, 340, 127, 300, 100, 150, 133)    
+apples.frame<-as.data.frame(apples)
+Apple_map <- joinCountryData2Map( apples.frame, joinCode = "ISO3", nameJoinColumn = "code")  
+mapCountryData(Apple_map, nameColumnToPlot="apple_consum", mapRegion='latin america', colourPalette = "heat", addLegend = TRUE, mapTitle="Apple consumption per capita")
+
+#*Source: https://stackoverflow.com/questions/28838866/mapping-all-of-latin-america-with-rworldmap?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+```
+```{r}
+
+par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+mapBubbles(Apple_map, mapRegion='latin america', nameZSize="apple_consum", , colourPalette="rainbow" , landCol="wheat", catMethod= "pretty", legendTitle= "Apple consumption per capita", main="Apple consumption per capita in 2015", legendHoriz=TRUE)
+
+```
+
+```{r}
+#Map with Bars
+par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+mapBars(Apple_map, nameX="LON", nameY="LAT" 
+       , nameZs=c('apple_consum')
+       , mapRegion='latin america'
+       , symbolSize=4,
+       landCol='maroon',
+       addCatLegend = TRUE,
+       addSizeLegend = TRUE,
+       barRelative = TRUE,
+       main = "Apple consumption",
+       barWidth = 1,
+       ratio =1,
+       maxZVal = 600,
+       lwd = 0.5, lwdSymbols = 1
+       )
+
+
+```
+
+
+
