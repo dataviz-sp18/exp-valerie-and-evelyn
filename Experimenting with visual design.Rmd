@@ -1,0 +1,213 @@
+---
+title: "The effect of shading on data interpretation"
+author: "Valerie de la Fuente and Evelyn Sanchez"
+date: "5/3/2018"
+output:
+   html_document:
+     number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(reshape2)
+library(lattice)
+```
+
+## Introduction
+
+The aim of this analysis is to identify what are the effects of using shading as a tool for data visualization and how does it affect perception and accuracy in the interpretation of data. 
+
+# Effects of shading on perception
+
+Cleveland and McGill (1984) explore the basis of graphical perception, that is, the visual decoding of information encoded on graphs, by analyzing basic perceptual tasks and then classify them based on how accurately people perform them. 
+
+Their main premise is that "A graphical form that involves elementary perceptual tasks that lead to more accurate judgments than another graphical form (with the same quantitative in-formation) will result in better organization and increase the chances of a correct perception of patterns and behavior." 
+
+Based on this definition they identify 10 elementary perceptions and order them from most to least accurate based on their judgment and experimentation. Their ranking is as follows: 
+
+- 1. Position along a common scale
+- 2. Positions along nonaligned scales
+- 3. Length, direction, angle
+- 4. Area
+- 5. Volume, curvature
+- 6. Shading, color saturation
+
+Shading is at the bottom of the accuracy on perception scale. On the paper, they argue that a shaded map would be the most difficult data to analyze accurately and suggest that a map with bars instead of shades would be easier to interpret by the viewer. The argument is that the basic perception of length is more accurate than shading. To illustrate what do we mean by "map with bars" please see Figure 1 that depicts a randomly generated variable that we called "Apple consumption per capita". 
+
+Figure 1 
+
+```{r}
+library(rworldmap)
+```
+
+```{r}
+#Map with Bars
+par(mai=c(0,0,.2,0),xaxs="i",yaxs="i")
+apples <- NULL  
+apples$country <- c("Mexico", "Colombia","Ecuador", "Venezuela", "Peru", "Brazil","Bolivia","Paraguay", "Chile", "Argentina", "Uruguay")  
+apples$code<- c("MEX", "COL","ECU", "VEN", "PER", "BRA","BOL","PRY", "CHL", "ARG", "URY")   
+apples$apple_consum<-c(380, 250, 530, 600, 546, 340, 127, 300, 100, 150, 133)    
+apples.frame<-as.data.frame(apples)
+Apple_map <- joinCountryData2Map( apples.frame, joinCode = "ISO3", nameJoinColumn = "code")  
+mapBars(Apple_map, nameX="LON", nameY="LAT" 
+       , nameZs=c('apple_consum')
+       , mapRegion='latin america'
+       , symbolSize=4,
+       landCol='maroon',
+       addCatLegend = TRUE,
+       addSizeLegend = TRUE,
+       barRelative = TRUE,
+       main = "Apple consumption",
+       barWidth = 1,
+       ratio =1,
+       maxZVal = 600,
+       lwd = 0.5, lwdSymbols = 1
+       )
+```
+
+Shading also entails another problem, when a map is involved, a misrepresentation of data can arise because the viewer performs another elementary perception: area estimation. This can create a bias, that is, if we show state level data in a U.S. map, viewers may be inclined to overestimate the effects of big states such as Texas and California vs Rhode Island or New York. Hence, avoiding noise or the confusion that arises from performing several different elementary perceptions is important for accuracy in data interpretation.
+
+This effect has another consequence, we tend to perceive information in clusters and that diminishes accuracy. In other words, when neighboring states have a similar shading, the viewer may group them and estimate the same value for all of them. 
+
+Furthermore, we are likely to perceive more accurately clusters that are darker because according to Cleveland and McGill, our sensitivity to differences at the high end of the scale appears to be greater than at the low end of the scale. This means that we tend to estimate better data in darker colors. 
+
+
+## Experiment
+
+To corroborate these assumptions, we designed an experiment that consists on measuring if people perceive better the data on an area map versus a map that uses shades. The map that uses areas is in a higher order in the elementary perception scale than shades, hence, we would expect that people have a perception closer to the real value on an area map. To achieve this, we designed two Latin America maps, one is a traditional shaded map (Figure 2) and the other one is a bubble map that depicts data in terms of areas. (Figure 3).
+
+Figure 2
+
+```{r}
+#MAP with shaded colors
+par(mai=c(0,0,.2,0),xaxs="i",yaxs="i")
+apples <- NULL  
+apples$country <- c("Mexico", "Colombia","Ecuador", "Venezuela", "Peru", "Brazil","Bolivia","Paraguay", "Chile", "Argentina", "Uruguay")  
+apples$code<- c("MEX", "COL","ECU", "VEN", "PER", "BRA","BOL","PRY", "CHL", "ARG", "URY")   
+apples$apple_consum<-c(380, 250, 530, 600, 546, 340, 127, 300, 100, 150, 133)    
+apples.frame<-as.data.frame(apples)
+Apple_map <- joinCountryData2Map( apples.frame, joinCode = "ISO3", nameJoinColumn = "code")  
+mapCountryData(Apple_map, nameColumnToPlot="apple_consum", mapRegion='latin america', colourPalette = "heat", addLegend = TRUE, mapTitle="Apple consumption per capita")
+```
+
+Figure 3
+
+```{r}
+
+par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+mapBubbles(Apple_map, mapRegion='latin america', nameZSize="apple_consum", , colourPalette="rainbow" , landCol="wheat", catMethod= "pretty", legendTitle= "Apple consumption per capita", main="Apple consumption per capita in 2015", legendHoriz=TRUE)
+
+```
+
+We created an imaginary data base for "Apple consumption per capita" and the experiment consisted on a survey that asked the participant to estimate from the maps what was the actual value of the variable. To isolate the effect of each map, we performed two surveys, so that the participants could only see one map. We named the variable apple consumption because we wanted to avoid any bias that may arise from preconceptions of participants in variables such as population or demographic characteristics. 
+
+Each survey consisted on either the bubble map or the shaded map and 5 questions: 
+
+"Based on this map, please estimate what was the apple consumption per capita in Mexico. We are not interested in your geographic knowledge, you can google where the country is to make sure you are looking at the right one. Please enter a numeric integer value in the response."
+
+We asked the same question for 4 additional countries. 
+
+Our experiment also aims to analyze what is the effect of clustering on accuracy. Therefore, we designed a database with closer values in geographically contiguous countries to create a clustering effect on both ends of the spectrum of colors. We expect the participants to be less accurate with countries that are inside clusters and bias their answers upwards or downwards depending on the vicinity. Finally, if we compare estimations within clusters, we would expect the estimations of the darker clusters to be less biased. 
+
+## Results
+We posted both surveys in the Amazon Tuk platform, with three minutes completition.We got 118 responses to the shaded map survey and 43 responses of the area map survey. 
+
+For the analysis, we start with a general review of the results. To illustrate this, we can observe the histogram of every question below, that compares the distribution and the median of the answers for each group.
+
+
+```{r}
+#Load the results of survey
+area_map <- read.csv(file="/Users/eves/Documents/Spring 2018/Data Viz/Experiment/area_map.csv", header=TRUE, sep=",")
+
+shaded_map <- read.csv(file="/Users/eves/Documents/Spring 2018/Data Viz/Experiment/shaded_map.csv", header=TRUE, sep=",")
+
+#Get number of answer
+nrow(shaded_map)
+nrow(area_map)
+
+names <- c("Mexico", "Colombia", "Peru", "Brazil", "Chile", "Argentina")
+colnames(area_map)<-(names)
+colnames(shaded_map)<-(names)
+
+#Get the mean 
+colMeans(shaded_map, na.rm = TRUE)
+colMeans(area_map, na.rm = TRUE)
+
+#Analyze the media for each group
+area_map$Group <-"Area"
+shaded_map$Group <-"Shaded"
+
+combined <- rbind(shaded_map,area_map)
+combine <- melt(combined)
+
+bwplot(value~Group|variable,data=combine,scales=list(relation="free"),as.table=T)
+
+```
+
+We can quickly observe that the results differ between groups, the questions 11, 14 and 15 are the ones in which results are more similar, which ask the questions about the consumption of apples in Brazil, Chile, and Argentina. Also, we can observe that the variance in the answers is quite large for the questions 14 and 11 (Brazi and Chile).
+
+We will first test the hypothesis related that the shaded maps make the public more susceptible to extreme values, in other words. In this case, one of the countries with higher consumption of apples is Peru (Q10) with a value of 546 apple consumption per capita. The average estimate for the respondents of the survey with the shaded map was 362, while for the responders with the are map was 259. When we performed a T-test, we obtain that there is a significant difference between means of the groups, nevertheless, our confidence interval is quite large. 
+```{r}
+#Ttest per question of Peru, identification of extreme cases
+t.test(shaded_map$Peru, area_map$Peru)
+mean(shaded_map$Peru)
+mean(area_map$Peru)
+
+```
+
+Secondly, we check the hypothesis of the that when a  map is involved, a misrepresentation of data can arise because the viewer performs a perception of the area, rather than the value.In this case, we compare the results of the question of apple consumption in Mexico and Brazil, which have similar values, 380 and 340 respectively. 
+
+For the estimated consumption of apple means of the group with the shaded map was 339 for Mexico and 340 for Brazil, almost the same result. Since the result is almost identical, we can say that there was not an area effect  for the shaded map, even when the size of Brazil is substantially larger than the size of Mexico.
+
+For the group with bubbles, the mean estimations are lower and less precise, with 249 for Mexico and 286 to Brazil. Nevertheless, when we checked this difference with a T-test, we discover that it is not significant.
+
+Additionally, we confirmed with T-test that the difference between estimations for the shaded and area map is significantly different from the mean perception of apple consumption is lower for both countries for the area map. 
+
+
+```{r}
+#Mean area estimation in shaded map, Brazil and Mexico
+mean(shaded_map$Mexico)
+mean(shaded_map$Brazil, na.rm = TRUE)
+#t.test(shaded_map$Q, area_map$Q10)
+mean(area_map$Mexico)
+mean(area_map$Brazil, na.rm = TRUE)
+#T TEST 
+t.test(shaded_map$Mexico, shaded_map$Brazil)
+t.test(shaded_map$Mexico, area_map$Mexico)
+t.test(shaded_map$Brazil, area_map$Brazil)
+
+```
+Finally, we checked the effect of the shaded map on making the public to read the  information in clusters and on diminishing accuracy of the real values.For this, we test the mean estimation of Colombia, surrounded by countries with higher consumption of apples, and Argentina, surrounded by countries with a lower consumption of apples. 
+
+For Colombia, which apple consumption is 250, the mean estimation in the shaded map is 241, quite close to the real value, while in the area map, the mean estimation is 305, much more than the real value.
+
+For Argentina, which apple consumption is 150, the mean estimation in the shaded map is 257, while in the area map, the mean estimation is 270. Both estimations are higher than the real value. 
+
+For both cases, there is a significant difference in the mean estimation of apple consumption.
+
+```{r}
+#Cluster effect for Colombia and Argentina
+mean(shaded_map$Colombia)
+mean(shaded_map$Argentina)
+
+mean(area_map$Colombia)
+mean(area_map$Argentina)
+
+t.test(shaded_map$Argentina, area_map$Argentina) 
+
+t.test(shaded_map$Colombia, area_map$Colombia)
+
+```
+
+
+## Conclusion
+
+Through this experiment, we test some of the hypothesis of Cleveland and McGill, regarding the possible problems with shaded maps. We contrasted a shaded map with a bubble map in order to check the difference in estimations, considering three possible effects produced by the shaded map: perception of extremes, cluster association and size effect.
+
+After our test, we discover very different mean estimations for all the questions.In particular, we find that the participants were able to identify easily the extreme values and with more accuracy. In the case of the size effect, there was no evidence that the difference in country sizes modify the estimation in shaded maps. Actually, the participants had a better estimation about the real consumption value of Mexico and Brazil in the shaded map than in the area map.
+
+Finally, we did not find a consistent evidence regarding cluster identification, either for lower values than for high values.
+
+
+
